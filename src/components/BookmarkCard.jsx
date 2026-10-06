@@ -1,0 +1,263 @@
+import { useState } from "react";
+import {
+  Card,
+  Box,
+  Typography,
+  IconButton,
+  Chip,
+  Stack,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  Avatar,
+  Tooltip,
+} from "@mui/material";
+import StarRoundedIcon from "@mui/icons-material/StarRounded";
+import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
+import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
+import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
+import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
+import { getDomain } from "../utils/url";
+import { colors } from "../theme/theme";
+
+function PreviewImage({ bookmark }) {
+  if (bookmark.previewImage) {
+    return (
+      <Box
+        component="img"
+        src={bookmark.previewImage}
+        alt=""
+        sx={{
+          width: "100%",
+          height: 120,
+          objectFit: "cover",
+          borderBottom: `2px solid ${colors.ink}`,
+          backgroundColor: colors.cream,
+        }}
+        onError={(e) => {
+          e.currentTarget.style.display = "none";
+        }}
+      />
+    );
+  }
+  return (
+    <Box
+      sx={{
+        width: "100%",
+        height: 120,
+        borderBottom: `2px solid ${colors.ink}`,
+        backgroundColor: colors.cream,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundImage:
+          "repeating-linear-gradient(135deg, rgba(26,26,26,0.04) 0 2px, transparent 2px 14px)",
+      }}
+    >
+      <LanguageRoundedIcon sx={{ fontSize: 36, color: "#C9C2B2" }} />
+    </Box>
+  );
+}
+
+export default function BookmarkCard({
+  bookmark,
+  categoryName,
+  categories,
+  editMode,
+  onOpen,
+  onToggleFavorite,
+  onEdit,
+  onDelete,
+  onMove,
+}) {
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const [moveAnchor, setMoveAnchor] = useState(null);
+
+  const domain = getDomain(bookmark.url);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(bookmark.url);
+    } catch {
+      // clipboard unavailable
+    }
+    setMenuAnchor(null);
+  };
+
+  return (
+    <Card
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        transition: "transform 0.15s",
+        "&:hover": { transform: "translateY(-3px)" },
+      }}
+    >
+      <Box sx={{ position: "relative" }}>
+        <PreviewImage bookmark={bookmark} />
+        <IconButton
+          size="small"
+          onClick={() => onToggleFavorite(bookmark.id)}
+          sx={{
+            position: "absolute",
+            top: 6,
+            right: 6,
+            backgroundColor: "rgba(255,253,246,0.9)",
+            border: `1.5px solid ${colors.ink}`,
+            "&:hover": { backgroundColor: colors.paper },
+          }}
+        >
+          {bookmark.favorite ? (
+            <StarRoundedIcon fontSize="small" sx={{ color: colors.yellowDark }} />
+          ) : (
+            <StarBorderRoundedIcon fontSize="small" />
+          )}
+        </IconButton>
+      </Box>
+
+      <Box sx={{ p: 1.75, display: "flex", flexDirection: "column", flex: 1 }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 0.5 }}>
+          <Avatar
+            src={bookmark.favicon}
+            variant="rounded"
+            sx={{ width: 20, height: 20, border: `1px solid ${colors.ink}` }}
+          >
+            <LanguageRoundedIcon sx={{ fontSize: 12 }} />
+          </Avatar>
+          <Typography
+            variant="subtitle2"
+            sx={{ fontWeight: 700, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+            title={bookmark.name}
+          >
+            {bookmark.name}
+          </Typography>
+          <IconButton size="small" onClick={(e) => setMenuAnchor(e.currentTarget)}>
+            <MoreVertRoundedIcon fontSize="small" />
+          </IconButton>
+        </Stack>
+
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            minHeight: 32,
+            mb: 1,
+          }}
+        >
+          {bookmark.description || domain}
+        </Typography>
+
+        <Typography variant="caption" sx={{ color: colors.muted, mb: 1 }}>
+          {domain}
+        </Typography>
+
+        <Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap", mb: 1.5, rowGap: 0.5 }}>
+          {categoryName && (
+            <Chip
+              label={categoryName}
+              size="small"
+              sx={{ backgroundColor: colors.yellow, height: 22, fontSize: 11 }}
+            />
+          )}
+          {bookmark.tags?.slice(0, 3).map((tag) => (
+            <Chip key={tag} label={tag} size="small" sx={{ height: 22, fontSize: 11 }} />
+          ))}
+        </Stack>
+
+        <Box sx={{ mt: "auto", display: "flex", gap: 1 }}>
+          <Chip
+            icon={<OpenInNewRoundedIcon sx={{ fontSize: 16 }} />}
+            label="開啟網站"
+            onClick={() => onOpen(bookmark)}
+            clickable
+            sx={{
+              flex: 1,
+              justifyContent: "center",
+              backgroundColor: colors.ink,
+              color: colors.yellow,
+              fontWeight: 700,
+              "&:hover": { backgroundColor: colors.ink },
+            }}
+          />
+          {editMode && (
+            <Tooltip title="刪除">
+              <IconButton
+                size="small"
+                onClick={() => onDelete(bookmark)}
+                sx={{ border: `1.5px solid ${colors.ink}` }}
+              >
+                <DeleteRoundedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
+      </Box>
+
+      <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={() => setMenuAnchor(null)}>
+        <MenuItem
+          onClick={() => {
+            onEdit(bookmark);
+            setMenuAnchor(null);
+          }}
+        >
+          <ListItemIcon>
+            <EditRoundedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>編輯</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={(e) => setMoveAnchor(e.currentTarget)}>
+          <ListItemIcon>
+            <DriveFileMoveRoundedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>移動到其他分頁</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleCopy}>
+          <ListItemIcon>
+            <ContentCopyRoundedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>複製網址</ListItemText>
+        </MenuItem>
+        <Divider />
+        <MenuItem
+          onClick={() => {
+            onDelete(bookmark);
+            setMenuAnchor(null);
+          }}
+          sx={{ color: "error.main" }}
+        >
+          <ListItemIcon>
+            <DeleteRoundedIcon fontSize="small" color="error" />
+          </ListItemIcon>
+          <ListItemText>刪除</ListItemText>
+        </MenuItem>
+      </Menu>
+
+      <Menu anchorEl={moveAnchor} open={!!moveAnchor} onClose={() => setMoveAnchor(null)}>
+        {categories.map((cat) => (
+          <MenuItem
+            key={cat.id}
+            selected={cat.id === bookmark.categoryId}
+            onClick={() => {
+              onMove(bookmark.id, cat.id);
+              setMoveAnchor(null);
+              setMenuAnchor(null);
+            }}
+          >
+            {cat.name}
+          </MenuItem>
+        ))}
+      </Menu>
+    </Card>
+  );
+}
